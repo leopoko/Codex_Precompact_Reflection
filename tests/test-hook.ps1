@@ -28,12 +28,26 @@ try {
     if ($result.cwd -ne $root) { throw 'Working directory mismatch.' }
     if ($result.prompt_length -le 0) { throw 'Prompt was empty.' }
 
+    $hookScriptText = Get-Content -LiteralPath $script -Raw -Encoding UTF8
+    if ($hookScriptText -notmatch '\$ErrorActionPreference = ''Continue''') {
+        throw 'Native Codex stderr is still treated as a terminating PowerShell error.'
+    }
+    if ($hookScriptText -notmatch '\$exitCode = \$LASTEXITCODE') {
+        throw 'Child Codex success is not determined from its native exit code.'
+    }
+
     Get-Content -LiteralPath (Join-Path $root '.codex\hooks.json') -Raw -Encoding UTF8 |
         ConvertFrom-Json | ForEach-Object {
             $hook = $_.hooks.PreCompact[0]
             if ($hook.matcher -ne '^(manual|auto)$') { throw 'Unexpected matcher.' }
             if ($hook.hooks[0].commandWindows -notmatch 'git rev-parse --show-toplevel') {
                 throw 'Hook command does not resolve the Git root.'
+            }
+            if ($hook.hooks[0].commandWindows -match '\$root') {
+                throw 'Hook command contains a variable that the hook runner may expand prematurely.'
+            }
+            if ($hook.hooks[0].commandWindows -notmatch 'Join-Path \(git rev-parse --show-toplevel\)') {
+                throw 'Hook command does not pass the Git root directly to Join-Path.'
             }
         }
 

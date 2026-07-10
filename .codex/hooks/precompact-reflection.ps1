@@ -74,9 +74,22 @@ try {
     $env:CODEX_PRECOMPACT_REFLECTION_ACTIVE = '1'
     $resultLog = Join-Path $PSScriptRoot 'precompact-reflection-child.log'
 
-    Get-Content -LiteralPath $transcriptPath -Raw -Encoding UTF8 |
-        & codex @codexArgs *> $resultLog
-    $exitCode = $LASTEXITCODE
+    # Codex writes informational progress (for example, "Reading additional
+    # input from stdin...") to stderr. Windows PowerShell turns native stderr
+    # records into PowerShell error records, so the script-wide `Stop` setting
+    # would incorrectly treat that normal output as a terminating hook error.
+    # Capture both streams in the child log and use the native exit code as the
+    # sole success/failure signal.
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        Get-Content -LiteralPath $transcriptPath -Raw -Encoding UTF8 |
+            & codex @codexArgs *> $resultLog
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
 
     if ($exitCode -ne 0) {
         throw "Child Codex exited with code $exitCode. See $resultLog"

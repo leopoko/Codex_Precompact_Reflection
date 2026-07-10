@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root '.codex/hooks/precompact-reflection.ps1')\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; & (Join-Path $root '.codex/hooks/precompact-reflection.ps1')\"",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/precompact-reflection.ps1')\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/precompact-reflection.ps1')\"",
             "timeout": 600,
             "statusMessage": "Writing session reflection before compaction"
           }
