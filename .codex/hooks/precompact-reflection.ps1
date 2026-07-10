@@ -19,11 +19,18 @@ try {
     }
 
     $inputText = [Console]::In.ReadToEnd()
+    if (-not $DryRun) {
+        Write-HookLog "INVOKED pid=$PID cwd=$((Get-Location).Path) input_length=$($inputText.Length)"
+    }
     if ([string]::IsNullOrWhiteSpace($inputText)) {
         throw 'Codex hook input was empty.'
     }
 
     $payload = $inputText | ConvertFrom-Json
+    $payloadFields = @($payload.PSObject.Properties.Name) -join ','
+    if (-not $DryRun) {
+        Write-HookLog "PAYLOAD fields=$payloadFields"
+    }
     $transcriptPath = [string]$payload.transcript_path
     if ([string]::IsNullOrWhiteSpace($transcriptPath) -or
         -not (Test-Path -LiteralPath $transcriptPath -PathType Leaf)) {

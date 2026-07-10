@@ -24,6 +24,14 @@ Codexで次を確認します。
 - `.codex/hooks/precompact-reflection.log`: hook本体のエラー
 - `.codex/hooks/precompact-reflection-child.log`: 子Codexの実行結果
 
+hook本体が呼ばれた場合は、処理の成否にかかわらず
+`precompact-reflection.log` の先頭に `INVOKED` と `PAYLOAD` が記録されます。
+この2行がなければ、hook自体が発火していません。
+
+既に開いているスレッドへhookを追加または更新しても、そのスレッドが開始時に
+読み込んだhook構成は更新されません。変更後は必ず新しいスレッドを開始してください。
+`/hooks` で有効化しただけでは、開始済みスレッドの実行系へ反映されない場合があります。
+
 hookが `/hooks` に出ない場合は、プロジェクトがGitリポジトリであること、Codexをプロジェクト内から起動したこと、プロジェクトを信頼済みであることを確認してください。hooks機能を明示的に無効化している場合は、`~/.codex/config.toml` に次を設定します。
 
 ```toml
