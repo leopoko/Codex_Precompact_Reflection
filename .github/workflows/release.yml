@@ -1,0 +1,38 @@
+name: Release distribution ZIP
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build distribution archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME}"
+          package="Codex_Precompact_Reflection-${version}"
+          mkdir -p "dist/${package}/.codex/hooks"
+          cp .codex/hooks.json "dist/${package}/.codex/hooks.json"
+          cp .codex/hooks/precompact-reflection.ps1 "dist/${package}/.codex/hooks/"
+          cp .codex/hooks/prompt.md "dist/${package}/.codex/hooks/"
+          cp README.md LICENSE "dist/${package}/"
+          cd dist
+          zip -r "${package}.zip" "${package}"
+          sha256sum "${package}.zip" > "${package}.zip.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.zip
+            dist/*.sha256
